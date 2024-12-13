@@ -1,0 +1,100 @@
+{% extends 'app/base.html' %}
+{% load static %}
+{% block title %}Checkout{% endblock title %}
+{% block main-content %}
+<div class="container">
+    {% if messages %}
+        {% for msg in messages %}
+            <div class="alert alert-danger" role="alert">
+                {{ msg }}
+            </div>
+        {% endfor %}
+    {% endif %}
+
+    <div class="row mt-5">
+        <!-- Order Summary Section -->
+        <div class="col-sm-6">
+            <h4>Order Summary</h4>
+            <hr>
+            {% for item in cart_items %}
+                <div class="card mb-2">
+                    <div class="card-body">
+                        <h5>Product: {{ item.product.title }}</h5>
+                        <p>Quantity: {{ item.quantity }}</p>
+                        <p class="fw-bold">Price: {{ item.product.discounted_price }}</p>
+                    </div>
+                </div>
+            {% endfor %}
+
+            <p class="fw-bold">Total Cost (Including Shipping Charge) = {{ totalamount }}</p>
+            <small>Terms and Conditions: Lorem ipsum dolor sit amet consectetur adipisicing elit. Mollitia, ullam saepe! Iure optio repellat dolor velit, minus rem. Facilis cumque neque numquam laboriosam, accusantium adipisci nisi nihil in et quis?</small>
+        </div>
+
+        <!-- Shipping Address Section -->
+        <div class="col-sm-4 offset-sm-1">
+            <h4>Select Shipping Address</h4>
+            <hr>
+            <form method="post" id="myform">
+                {% csrf_token %}
+                {% for ad in add %}
+                    <div class="card">
+                        <div class="card-body">
+                            <h5>{{ ad.name }}</h5>
+                            <p>Mobile: {{ ad.mobile }}</p>
+                            <p>{{ ad.locality }} {{ ad.city }} {{ ad.division }} - {{ ad.zipcode }}</p>
+                        </div>
+                    </div>
+
+                    <div class="form-check mt-2 mb-5">
+                        <input class="form-check-input" type="radio" name="custid" id="custadd{{ forloop.counter }}" value="{{ ad.id }}">
+                        <label class="form-check-label fw-bold" for="custadd{{ forloop.counter }}">
+                            Address: {{ forloop.counter }}
+                        </label>
+                    </div>
+                {% endfor %}
+
+                <div class="form-check mb-3">
+                    <label for="totamount" class="form-label">Total Amount</label>
+                    <input type="number" class="form-control" name="totamount" value="{{ totalamount }}" readonly>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock main-content %}
+
+{% block COD %}
+<div class="text-end" style="margin-right: 1.2in;">
+    <!-- Online Payment Button -->
+    <button id="online-payment-button" class="btn btn-warning mt-3 fw-bold" style="width: 200px;">Online Payment</button>
+
+    <!-- Cash On Delivery Form -->
+    <form id="cod-form" method="GET" action="{% url 'paymentdone' %}" style="display: inline-block;">
+        {% csrf_token %}
+        <input type="hidden" name="order_id" value="{{ fake_order_id }}">
+        <input type="hidden" name="payment_id" value="{{ fake_order_id_payment_id }}">
+        <input type="hidden" name="cust_id" id="cust_id_field">
+        <button type="submit" id="cod-button" class="btn btn-warning mt-3 fw-bold" style="width: 200px;">Cash On Delivery</button>
+    </form>
+</div>
+
+<script>
+    // Online Payment Button Handler
+    document.getElementById('online-payment-button').addEventListener('click', function (event) {
+        event.preventDefault(); // Prevent form submission
+        alert("We don't accept online payments yet. Please use Cash On Delivery to place your order.");
+    });
+
+    // Cash On Delivery Button Handler
+    document.getElementById('cod-button').addEventListener('click', function (event) {
+        const selectedAddress = document.querySelector('input[name="custid"]:checked');
+        if (!selectedAddress) {
+            event.preventDefault();
+            alert('Please select a shipping address before placing your order.');
+            return;
+        }
+        document.getElementById('cust_id_field').value = selectedAddress.value;
+    });
+</script>
+<br><br><br>
+{% endblock COD %}
